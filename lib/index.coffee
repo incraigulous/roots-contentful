@@ -31,6 +31,7 @@ module.exports = (opts) ->
       @roots.config.locals ?= {}
       @roots.config.locals.contentful ?= {}
       @roots.config.locals.asset = asset_view_helper
+      @cache = opts.cache || false
 
     setup: ->
       configure_content(opts.content_types).with(@)
@@ -80,11 +81,16 @@ module.exports = (opts) ->
     ###
 
     get_all_content = (types) ->
-      W.map types, (t) =>
-        fetch_content(t)
+      # only fetch content if caching is off and the contentful local exists
+      console.log(@cache)
+      if (_.isEmpty(@roots.config.locals.contentful) && !@cache)
+        W.map types, (t) ->
+          fetch_content(t)
           .then(format_content)
           .then((c) -> t.content = c)
           .yield(t)
+      else
+        return @roots.config.locals.contentful
 
     ###*
      * Fetch entries for a single content type object
